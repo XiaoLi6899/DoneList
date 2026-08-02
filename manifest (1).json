@@ -1,0 +1,13 @@
+{
+  "name": "完成日记",
+  "short_name": "完成日记",
+  "description": "记下今天你做到的每一件事",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#efe7fb",
+  "theme_color": "#efe7fb",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#efe7fb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="完成日记">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<title>完成日记 · DoneList</title>
+<style>
+  :root{
+    --bg1:#f3ecfc; --bg2:#e7dcf7;      /* 浅丁香背景 */
+    --ink:#3a2f52;                      /* 主文字（深紫墨） */
+    --lilac:#8a6fc0;                    /* 丁香紫（强调） */
+    --lilac-soft:#b9a3e0;
+    --rose:#c47ea0;                     /* 暖玫 */
+    --muted:#9184ab;                    /* 次要文字 */
+    --line:rgba(138,111,192,.18);
+    --card:rgba(255,255,255,.55);
+    --card-solid:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(120% 80% at 50% 0%, var(--bg1) 0%, var(--bg2) 70%);
+    color:var(--ink);min-height:100dvh;-webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:460px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;
+    padding:calc(20px + env(safe-area-inset-top)) 22px calc(18px + env(safe-area-inset-bottom))}
+
+  /* 顶部 */
+  .top{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px}
+  .title{font-size:15px;font-weight:600;letter-spacing:2px;color:var(--lilac)}
+  .title small{font-weight:400;color:var(--muted);letter-spacing:1px}
+  .moon{background:transparent;border:1px solid var(--line);color:var(--lilac);
+    border-radius:100px;padding:7px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s}
+  .moon:active{background:rgba(138,111,192,.08)}
+
+  .date{display:flex;align-items:baseline;gap:10px;margin-top:4px}
+  .date .d{font-size:26px;font-weight:700;letter-spacing:.5px;color:var(--ink)}
+  .date .w{font-size:13px;color:var(--muted)}
+  .count{font-size:13.5px;color:var(--rose);margin-top:8px;min-height:18px;transition:.4s;font-weight:500}
+
+  .nav{display:flex;align-items:center;justify-content:space-between;margin:12px 0 14px}
+  .nav button{background:var(--card);border:1px solid var(--line);color:var(--lilac);
+    width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer;transition:.2s}
+  .nav button:active{background:rgba(138,111,192,.12)}
+  .nav .today{font-size:12.5px;color:var(--muted);letter-spacing:1px;cursor:pointer}
+
+  .inputbar{display:flex;gap:10px;margin-bottom:16px}
+  #inp{flex:1;background:var(--card-solid);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;color:var(--ink);font-size:16px;font-family:inherit;outline:none;
+    box-shadow:0 2px 10px -6px rgba(138,111,192,.4)}
+  #inp::placeholder{color:var(--muted)}
+  #inp:focus{border-color:var(--lilac-soft)}
+  .add{background:linear-gradient(180deg,#a98fd8,#8a6fc0);border:none;color:#fff;
+    font-weight:600;border-radius:14px;padding:0 20px;font-size:16px;cursor:pointer;font-family:inherit;
+    box-shadow:0 4px 14px -4px rgba(138,111,192,.6)}
+  .add:active{transform:scale(.97)}
+
+  .list{flex:1;display:flex;flex-direction:column;gap:10px}
+  .item{display:flex;align-items:flex-start;gap:12px;background:var(--card-solid);
+    border:1px solid var(--line);border-radius:14px;padding:14px 15px;
+    box-shadow:0 2px 12px -8px rgba(138,111,192,.5);animation:pop .45s ease both}
+  @keyframes pop{0%{opacity:0;transform:translateY(8px) scale(.98)}100%{opacity:1;transform:none}}
+  .dot{width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:2px;
+    background:radial-gradient(circle at 38% 34%, #efe4ff, var(--lilac) 65%, #6d5a94);
+    box-shadow:0 0 8px rgba(138,111,192,.4)}
+  .txt{flex:1;font-size:15.5px;line-height:1.55;color:var(--ink);word-break:break-word}
+  .time{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.5px}
+  .del{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;
+    padding:0 2px;opacity:.55;transition:.2s;flex-shrink:0}
+  .del:active{opacity:1;color:var(--rose)}
+
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;text-align:center;color:var(--muted);padding:40px 0}
+  .empty .o{width:60px;height:60px;border-radius:50%;
+    background:radial-gradient(circle at 38% 34%, #efe4ff, var(--lilac) 60%, #6d5a94);
+    box-shadow:0 0 26px rgba(138,111,192,.3);opacity:.6}
+  .empty p{font-size:14px;line-height:1.7;max-width:16em}
+
+  .closing{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+    text-align:center;font-family:"Songti SC","Noto Serif SC",serif;
+    font-size:15px;line-height:2;color:var(--lilac);letter-spacing:.5px}
+  .foot{text-align:center;font-size:11.5px;color:var(--muted);letter-spacing:2px;margin-top:14px}
+  .foot b{color:var(--lilac);font-weight:600}
+
+  /* 睡前页 */
+  .night{position:fixed;inset:0;z-index:80;display:none;
+    background:radial-gradient(130% 90% at 50% 20%, #2a2140 0%, #191228 70%);color:#efe4ff;
+    animation:fade .8s ease both;overflow:hidden}
+  .night.show{display:block}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  /* 睡前内容层：入睡时整体变模糊、淡出 */
+  .night-inner{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:40px 32px;
+    transition:filter 2.8s ease, opacity 2.8s ease}
+  .night-inner.dim{filter:blur(14px);opacity:0}
+  .night .moonorb{width:96px;height:96px;border-radius:50%;margin-bottom:28px;
+    background:radial-gradient(circle at 40% 36%, #fff7e8, #e9d9f0 55%, #9a86c6);
+    box-shadow:0 0 50px 8px rgba(203,182,236,.4);animation:breathe 6s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(.94)}50%{transform:scale(1.02)}}
+  .night h1{font-size:26px;font-weight:600;line-height:1.5;margin-bottom:18px;letter-spacing:1px}
+  .night .sum{font-size:16px;line-height:1.9;color:#cbb6ec;max-width:18em;margin-bottom:8px}
+  .night .sum b{color:#efe4ff;font-weight:600}
+  .night .poem{font-family:"Songti SC","Noto Serif SC",serif;font-size:16px;line-height:2.1;
+    color:#c3b0e4;margin:22px 0 30px;letter-spacing:1px}
+  .night-inner button{position:absolute;bottom:12vh;left:50%;transform:translateX(-50%);
+    white-space:nowrap;background:transparent;border:1px solid rgba(203,182,236,.3);color:#cbb6ec;
+    border-radius:100px;padding:13px 30px;font-size:15px;cursor:pointer;font-family:inherit}
+  .night .brand{position:absolute;bottom:5vh;left:0;right:0;text-align:center;
+    font-size:11.5px;color:rgba(184,163,224,.7);letter-spacing:2px}
+
+  /* 丝绸幕布：从上往下垂落；纵向柔和垂褶，底边一道扇形褶皱 */
+  .veil{position:absolute;left:0;right:0;top:0;height:0;z-index:90;pointer-events:none;overflow:visible;
+    transition:height 7.5s cubic-bezier(.42,0,.32,1);
+    background:
+      linear-gradient(180deg, rgba(160,138,206,.34) 0%, rgba(150,128,200,.30) 55%, rgba(138,114,190,.28) 100%);
+    backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+  .veil.down{height:100%}
+  .veil.up{height:0;transition:height 3.4s cubic-bezier(.42,0,.32,1)}
+  /* 纵向垂褶：明暗相间的竖条，做出布料垂坠的立体感（柔和、非线条格纹） */
+  .veil::before{content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(90deg,
+      rgba(255,255,255,.05) 0, rgba(255,255,255,.05) 3px,
+      rgba(90,70,140,.10) 26px, rgba(255,255,255,.05) 52px);
+    opacity:.8}
+  /* 一道柔和缎光 */
+  .veil::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(112deg, transparent 34%, rgba(255,255,255,.10) 50%, transparent 64%);opacity:.7}
+  /* 底边：一道上下起伏的宽波浪（SVG 波形遮罩，无额外投影） */
+  .veil{
+    -webkit-mask:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='30'%3E%3Cpath d='M0,15 Q30,3 60,15 Q90,27 120,15 L120,0 L0,0 Z' fill='%23000'/%3E%3C/svg%3E") left bottom/120px 30px repeat-x,
+      linear-gradient(#000,#000) top/100% calc(100% - 29px) no-repeat;
+    mask:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='30'%3E%3Cpath d='M0,15 Q30,3 60,15 Q90,27 120,15 L120,0 L0,0 Z' fill='%23000'/%3E%3C/svg%3E") left bottom/120px 30px repeat-x,
+      linear-gradient(#000,#000) top/100% calc(100% - 29px) no-repeat}
+
+  /* 帘落定后：按钮浮在下方弧形缝隙里，位置与原按钮一致 */
+  .asleep{position:absolute;inset:0;z-index:95;display:none;opacity:0;transition:opacity 2s ease}
+  .asleep.show{display:block;opacity:1}
+  .asleep button{position:absolute;bottom:12vh;left:50%;transform:translateX(-50%);
+    white-space:nowrap;background:transparent;border:1px solid rgba(203,182,236,.35);color:#d8c8f0;
+    border-radius:100px;padding:13px 30px;font-size:15px;cursor:pointer;font-family:inherit}
+  .asleep .brand{position:absolute;bottom:5vh;left:0;right:0;text-align:center;
+    font-size:11.5px;color:rgba(184,163,224,.75);letter-spacing:2px}
+
+  #fw{position:fixed;inset:0;pointer-events:none;z-index:60}
+  .spark{position:absolute;width:6px;height:6px;border-radius:50%;opacity:0}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="title">完成日记<small> · DoneList</small></div>
+    <button class="moon" onclick="openNight()">🌙 结束这一天</button>
+  </div>
+
+  <div class="date"><span class="d" id="dLabel">今天</span><span class="w" id="wLabel"></span></div>
+  <div class="count" id="count"></div>
+
+  <div class="nav">
+    <button onclick="shiftDay(-1)">‹</button>
+    <span class="today" id="navMid" onclick="goToday()"></span>
+    <button onclick="shiftDay(1)">›</button>
+  </div>
+
+  <div class="inputbar">
+    <input id="inp" placeholder="今天，你做到了什么？" maxlength="120"
+      onkeydown="if(event.key==='Enter')addItem()">
+    <button class="add" onclick="addItem()">记下</button>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <div class="closing">每一次闭环，都是突触的重连；<br>神经元的放电，就是为你闪烁的烟花。</div>
+  <div class="foot"><b>李啸天</b> · 呼啸客栈</div>
+</div>
+
+<!-- 睡前页 -->
+<div class="night" id="night">
+  <div class="night-inner" id="nightInner">
+    <div class="moonorb"></div>
+    <h1>今天，结束了</h1>
+    <p class="sum" id="nightSum"></p>
+    <p class="poem">何如十二楼中住，<br>放下珠帘了不闻。</p>
+    <button onclick="dropCurtain()">放下珠帘，安心入睡</button>
+    <div class="brand">李啸天 · 呼啸客栈</div>
+  </div>
+
+  <!-- 丝绸幕布：从上往下垂落，底边一道柔和波浪 -->
+  <div class="veil" id="veil"></div>
+
+  <!-- 帘落定后：只留一个按钮 + 落款 -->
+  <div class="asleep" id="asleep">
+    <button onclick="raiseCurtain()">拉开珠帘，新的一天</button>
+    <div class="brand">李啸天 · 呼啸客栈</div>
+  </div>
+</div>
+
+<div id="fw"></div>
+
+<script>
+const KEY='donelist_hxkz_v1';
+let cursor;
+
+/* 一天的分界线在凌晨5点：凌晨记的算作前一天。用"日记日"归档，绝不隐藏数据 */
+function journalDate(d){const x=new Date(d.getTime()-5*3600*1000);x.setHours(0,0,0,0);return x;}
+cursor=journalDate(new Date());
+
+function keyOf(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
+function save(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+function isToday(d){return keyOf(d)===keyOf(journalDate(new Date()));}
+const WEEK=['周日','周一','周二','周三','周四','周五','周六'];
+
+function render(){
+  const data=load();const k=keyOf(cursor);const items=data[k]||[];
+  const viewingToday=isToday(cursor);
+
+  document.getElementById('dLabel').textContent = viewingToday?'今天':(cursor.getMonth()+1)+'月'+cursor.getDate()+'日';
+  document.getElementById('wLabel').textContent = (cursor.getMonth()+1)+'.'+cursor.getDate()+' · '+WEEK[cursor.getDay()];
+  document.getElementById('navMid').textContent = viewingToday?'今天':'回到今天';
+
+  const c=document.getElementById('count');
+  if(viewingToday){
+    c.textContent = items.length ? '今天已完成 '+items.length+' 件，每一件都算数。' : '';
+  }else{
+    c.textContent = items.length ? '这一天，你完成了 '+items.length+' 件。' : '';
+  }
+
+  const list=document.getElementById('list');
+  if(!items.length){
+    list.innerHTML=`<div class="empty"><div class="o"></div>
+      <p>${viewingToday?'还没有记录。<br>哪怕是一件很小的事，也值得记下来。':'这一天，没有记录。'}</p></div>`;
+    return;
+  }
+  list.innerHTML=items.map(it=>`
+    <div class="item"><div class="dot"></div>
+      <div class="txt">${escapeHtml(it.t)}<div class="time">${it.time||''}</div></div>
+      <button class="del" onclick="delItem(${it.ts})">×</button></div>`).join('');
+}
+
+function addItem(){
+  const inp=document.getElementById('inp');const v=inp.value.trim();if(!v)return;
+  const data=load();const k=keyOf(cursor);if(!data[k])data[k]=[];
+  const now=new Date();const hh=String(now.getHours()).padStart(2,'0'),mm=String(now.getMinutes()).padStart(2,'0');
+  data[k].push({t:v,time:hh+':'+mm,ts:Date.now()});
+  save(data);inp.value='';render();firework();
+}
+
+function delItem(ts){
+  const data=load();const k=keyOf(cursor);
+  if(data[k]){data[k]=data[k].filter(it=>it.ts!==ts);if(!data[k].length)delete data[k];save(data);render();}
+}
+function shiftDay(n){cursor.setDate(cursor.getDate()+n);render();}
+function goToday(){cursor=journalDate(new Date());render();}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+/* 睡前页 */
+function openNight(){
+  const data=load();const items=data[keyOf(journalDate(new Date()))]||[];
+  const n=items.length;let msg;
+  if(n===0){
+    msg='今天也许没有记下什么，<br>但你撑过了这一天——<br>这本身，就已经足够。';
+  }else{
+    const sample = items.slice(-3).map(x=>x.t).join('、');
+    msg=`今天，你完成了 <b>${n}</b> 件事。<br>比如：${escapeHtml(sample)}${n>3?' 等等':''}。<br><br>这一天，你做了很多。<br>现在可以放下了。`;
+  }
+  document.getElementById('nightSum').innerHTML=msg;
+  // 复位
+  const inner=document.getElementById('nightInner'), veil=document.getElementById('veil'), asleep=document.getElementById('asleep');
+  inner.style.display='flex'; inner.classList.remove('dim');
+  veil.classList.remove('down','up');
+  asleep.classList.remove('show');
+  document.getElementById('night').classList.add('show');
+}
+
+/* 放下珠帘：左右两幅丝绸大幕缓缓合拢 → 透过它仍见字 → 字迹再渐渐模糊隐去 → 只留按钮与落款 */
+function dropCurtain(){
+  const inner=document.getElementById('nightInner'), veil=document.getElementById('veil'), asleep=document.getElementById('asleep');
+  veil.classList.remove('up');
+  requestAnimationFrame(()=>{
+    veil.classList.add('down');            // 两幅大幕合拢
+  });
+  setTimeout(()=>{ inner.classList.add('dim'); }, 5200);  // 幕将垂满时，字迹才开始模糊淡去
+  setTimeout(()=>{
+    inner.style.display='none';
+    asleep.classList.add('show');          // 只留按钮与落款浮现
+  },8400);
+}
+
+/* 拉开珠帘：回到白天。记录始终按日记日留存，不清空；新的一天在跨过凌晨5点后自然翻页 */
+function raiseCurtain(){
+  const inner=document.getElementById('nightInner'), veil=document.getElementById('veil'), asleep=document.getElementById('asleep');
+  asleep.classList.remove('show');
+  veil.classList.add('up');veil.classList.remove('down');
+  setTimeout(()=>{
+    document.getElementById('night').classList.remove('show');
+    inner.style.display='flex'; inner.classList.remove('dim');
+    veil.classList.remove('up');
+    goToday();
+  },3700);
+}
+
+/* 烟花 */
+function firework(){
+  const fw=document.getElementById('fw');
+  const cx=window.innerWidth/2, cy=window.innerHeight*0.4;
+  const colors=['#b9a3e0','#8a6fc0','#c47ea0','#d9c6f2'];const n=14;
+  for(let i=0;i<n;i++){
+    const s=document.createElement('div');s.className='spark';
+    s.style.left=cx+'px';s.style.top=cy+'px';
+    s.style.background=colors[i%colors.length];s.style.boxShadow='0 0 8px '+colors[i%colors.length];
+    fw.appendChild(s);
+    const ang=(Math.PI*2*i)/n+Math.random()*0.4;const dist=60+Math.random()*70;
+    const dx=Math.cos(ang)*dist,dy=Math.sin(ang)*dist;
+    s.animate([{transform:'translate(0,0) scale(1)',opacity:1},
+      {transform:`translate(${dx}px,${dy}px) scale(.2)`,opacity:0}],
+      {duration:750+Math.random()*300,easing:'cubic-bezier(.2,.7,.3,1)'});
+    setTimeout(()=>s.remove(),1100);
+  }
+}
+render();
+</script>
+</body>
+</html>
